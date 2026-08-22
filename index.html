@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0c0d10">
+  <title>Matt Fitness Public</title>
+  <link rel="stylesheet" href="style.css?v=public-1">
+</head>
+<body>
+<div class="public-build-badge">PUBLIC V1</div>
+<div class="app">
+  <section id="today" class="screen active">
+    <div class="top"><div class="title">Today</div><div class="pill" id="todayLabel"></div></div>
+    <div class="section-title">Daily log</div>
+    <div class="card daily-date-card">
+      <div class="daily-date-nav">
+        <button class="ghost compact" id="logPrevDay" type="button" onclick="changeLogDate(-1)">‹</button>
+        <div class="daily-date-native-wrap">
+          <button class="secondary daily-date-label" id="logDateBtn" type="button" aria-hidden="true"></button>
+          <input id="logDatePicker" type="date" class="daily-date-native-input" onchange="setLogDate(this.value)" aria-label="Choose daily log date">
+        </div>
+        <button class="ghost compact" id="logNextDay" type="button" onclick="changeLogDate(1)">›</button>
+      </div>
+      <button class="ghost compact" id="logTodayBtn" type="button" onclick="setLogDate(todayISO())">Today</button>
+      <p class="tiny">Weight, nutrition, energy, water, cardio, checklist and progress-photo tracking use this date. Workout scheduling stays on today.</p>
+    </div>
+
+    <div class="section-title">Energy balance</div>
+    <div class="card" id="energyBalance"></div>
+
+    <div class="section-title">Nutrition</div>
+    <div class="card macro-snapshot" id="todayMacros"></div>
+
+    <div class="section-title">Water</div>
+    <div class="card water-card">
+      <div class="water-head"><div><strong id="waterAmount">0 / 96 oz</strong><span id="waterDateLabel">selected day</span></div><label>Goal <input id="waterGoal" inputmode="numeric" value="96"></label></div>
+      <div class="water-track"><div id="waterProgress"></div></div>
+      <div class="water-controls"><button class="secondary" id="waterMinusBtn" type="button" onclick="changeWater(-8)">− 8 oz</button><button class="primary water-add" id="waterPlusBtn" type="button" onclick="changeWater(8)">+ 8 oz</button></div>
+      <button class="ghost water-goal-save" id="saveWaterGoalBtn" type="button" onclick="saveWaterGoal()">Save water goal</button>
+    </div>
+
+    <div class="section-title">Workout</div>
+    <div class="card hero">
+      <div class="eyebrow" id="phaseLabel"></div>
+      <h2 id="nextWorkout"></h2>
+      <p class="muted" id="sessionLabel"></p>
+      <div class="progress"><div id="overallProgress"></div></div>
+      <div class="tiny" id="progressText"></div>
+      <button class="primary" id="startBtn">Start workout</button><button class="primary rest-ack" id="ackRestBtn" style="display:none">Acknowledge rest day</button>
+    </div>
+
+    <div class="section-title">Weight</div>
+    <div class="card weight-card">
+      <label>Morning <span>lb</span><input id="amWeight" inputmode="decimal" placeholder="185.0"></label>
+      <label>Evening <span>lb</span><input id="pmWeight" inputmode="decimal" placeholder="188.0"></label>
+      <button class="secondary compact" id="saveWeightBtn">Save weights</button>
+      <div class="tiny" id="weightHint"></div>
+    </div>
+
+    <div class="section-title">Walks & jogs <span class="section-date-inline" id="activityDateLabel"></span></div>
+    <div class="card activity-card">
+      <div class="tiny activity-summary" id="activitySummary"></div>
+      <div id="activityList"></div>
+      <div class="activity-entry-divider"></div>
+      <div class="eyebrow activity-entry-label">Add walk / jog</div>
+      <div class="activity-form">
+        <label>Type<select id="activityType"><option selected>Walk</option><option>Jog</option><option>Run</option><option>Other cardio</option></select></label>
+        <label class="activity-time-field">Time<input id="activityTime" type="time"></label>
+        <label>Distance (mi)<input id="activityDistance" inputmode="decimal" placeholder="3.20"></label>
+        <label>Minutes<input id="activityMinutes" inputmode="numeric" placeholder="30"></label>
+        <label>Seconds<input id="activitySeconds" inputmode="numeric" placeholder="17" max="59"></label>
+        <label>Total Calories<input id="activityCalories" inputmode="numeric" placeholder="342"></label>
+      </div>
+      <details class="hr-details" id="hrDetails">
+        <summary>Heart Rate Details</summary><p class="tiny hr-hint">Jog and Run heart-rate fields start at zero.</p>
+        <div class="hr-form">
+          <label>Avg HR (bpm)<input id="activityAvgHr" inputmode="numeric" placeholder="154"></label>
+          <label>Zone 1<input id="activityZ1" placeholder="1:43"></label>
+          <label>Zone 2<input id="activityZ2" placeholder="4:14"></label>
+          <label>Zone 3<input id="activityZ3" placeholder="5:23"></label>
+          <label>Zone 4<input id="activityZ4" placeholder="6:55"></label>
+          <label>Zone 5<input id="activityZ5" placeholder="0:00"></label>
+        </div>
+      </details>
+      <button class="secondary compact" id="addActivityBtn" type="button" onclick="addActivity()">+ Add activity</button>
+    </div>
+
+    <div class="section-title">Progress photos</div>
+    <div class="card photo-tracker-card">
+      <div class="eyebrow">Progress photos</div>
+      <p class="muted">Mark the angles you took for the selected Daily Log date.</p>
+      <p class="tiny photo-storage-note">*Photos can’t be saved in the app. Save them to a dedicated photo album, then mark the days you take photos here.</p>
+      <div class="photo-check-grid">
+        <label><input type="checkbox" id="photoDoneFront" onchange="setPhotoDone('front', this.checked)"><span>Front</span></label>
+        <label><input type="checkbox" id="photoDoneSide" onchange="setPhotoDone('side', this.checked)"><span>Side</span></label>
+        <label><input type="checkbox" id="photoDoneBack" onchange="setPhotoDone('back', this.checked)"><span>Back</span></label>
+        <label><input type="checkbox" id="photoDoneFlex" onchange="setPhotoDone('flex', this.checked)"><span>Flex</span></label>
+      </div>
+      <div class="tiny" id="photoTakenStatus"></div>
+    </div>
+
+    <div class="grid">
+      <div class="stat"><strong id="completedStat">0</strong><span>workouts completed</span></div>
+      <div class="stat"><strong id="phaseStat">1 / 3</strong><span>current phase</span></div>
+    </div>
+</section>
+
+  <section id="workout" class="screen">
+    <div class="top"><button class="ghost" data-go="today">← Back</button><div class="pill" id="workoutPhase"></div></div>
+    <div class="timer" id="timer"><span>Rest <span id="timerText">02:00</span></span><button id="skipTimer">Skip</button></div>
+    <div class="card"><div class="eyebrow">Current workout</div><h2 id="workoutTitle"></h2><p class="muted" id="workoutMeta"></p></div>
+    <div class="card" id="exerciseList"></div>
+    <button class="primary" id="finishBtn" type="button" onclick="openFinish()">Finish workout</button>
+  </section>
+
+  <section id="nutrition" class="screen">
+    <div class="top"><div class="title">Nutrition</div><input class="date-control" id="nutritionDate" type="date"></div>
+    <div class="card">
+      <div class="eyebrow">Daily totals</div>
+      <div class="macro-grid" id="macroTotals"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Food log</div>
+      <div id="foodList"></div>
+      <button class="secondary compact" id="addFoodBtn" type="button" onclick="addFood()">+ Add food</button>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Daily targets</div>
+      <div class="target-grid">
+        <label>Calories<input id="goalCal" inputmode="numeric"></label>
+        <label>Protein<input id="goalP" inputmode="numeric"></label>
+        <label>Carbs<input id="goalC" inputmode="numeric"></label>
+        <label>Fat<input id="goalF" inputmode="numeric"></label>
+      </div>
+      <button class="secondary compact" id="saveGoalsBtn">Save targets</button>
+    </div>
+  </section>
+
+  <section id="checklist" class="screen">
+    <div class="top"><div class="title">Checklist</div><div class="pill" id="checklistDate"></div></div>
+    <div class="card">
+      <div class="checklist-head"><div><div class="eyebrow">Daily checklist</div><h3 id="checklistCount">0 of 0 complete</h3></div><button class="secondary compact" id="reorderChecklistBtn" type="button" onclick="toggleChecklistReorder()">Reorder</button></div>
+      <div id="checklistList"></div>
+    </div>
+    <div class="card checklist-add">
+      <label>New item<input id="newChecklistItem" type="text" placeholder="Creatine, stretch, vitamins..."></label>
+      <button class="primary" id="addChecklistBtn" type="button" onclick="addChecklistItem()">Add item</button>
+    </div>
+  </section>
+
+  <section id="history" class="screen">
+    <div class="top"><div class="title">History</div><div class="calendar-controls"><button class="ghost" id="prevMonth">‹</button><span id="monthLabel"></span><button class="ghost" id="nextMonth">›</button></div></div>
+    <div class="card calendar-card">
+      <div class="weekday-row"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <div class="calendar" id="calendar"></div>
+      <div class="legend"><span><i class="workout-dot"></i>Workout</span><span><i class="rest-dot"></i>Rest</span><span><i class="complete-swatch"></i>Complete</span></div>
+    </div>
+    <div class="card" id="nextScheduleCard"></div>
+    <div class="card" id="dayDetail"><p class="notice">Tap a completed workout day to see its details.</p></div>
+  </section>
+
+  <section id="progress" class="screen">
+    <div class="top"><div class="title">More</div><div class="pill">Matt Fitness</div></div>
+
+    <div class="more-tabs">
+      <button class="secondary compact on" id="moreProgressTab" type="button" onclick="showMoreSection('progress')">Progress</button>
+      <button class="secondary compact" id="moreWorkoutsTab" type="button" onclick="showMoreSection('workouts')">Workouts</button>
+    </div>
+
+    <div id="moreProgressSection">
+    <div class="card">
+      <div class="eyebrow">Current week</div>
+      <h3>Macro + energy snapshot</h3>
+      <div class="weekly-table-wrap"><div id="currentWeekSnapshot"></div></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Weight trend</div>
+      <div class="metric-row"><div><strong id="latestWeight">—</strong><span>latest AM</span></div><div><strong id="avg7Weight">—</strong><span>7-day AM avg</span></div><div><strong id="dailySwing">—</strong><span>avg AM→PM</span></div></div>
+      <div id="weightHistory" class="weight-history"></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-head"><div><div class="eyebrow">Energy trend</div><h3>Daily energy balance</h3></div></div>
+      <div id="energyChart" class="chart-wrap"></div>
+      <p class="tiny chart-note">Negative = estimated deficit · Positive = estimated surplus.</p>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-head"><div><div class="eyebrow">Cardio progress</div><h3>Weekly miles</h3></div></div>
+      <div id="cardioChart" class="chart-wrap"></div>
+      <p class="tiny chart-note">Walk miles and Run/Jog miles are grouped by week.</p>
+    </div>
+    <div class="card cardio-summary-card">
+      <div class="eyebrow">Cardio summary</div>
+      <div id="cardioSummary"></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-head"><div><div class="eyebrow">Running heart rate</div><h3>Zone 3 % by run</h3></div></div>
+      <div id="zone3Chart" class="chart-wrap"></div>
+      <p class="tiny chart-note">Percent of each Jog/Run spent in Zone 3. Sessions with no recorded Zone 3 time are omitted.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Weekly history</div>
+      <h3>Weekly averages</h3>
+      <div class="weekly-table-wrap"><div id="weeklyAverageHistory"></div></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Daily log history</div>
+      <h3>Macros + energy by day</h3>
+      <div class="weekly-table-wrap daily-log-table-wrap"><div id="dailyMacroEnergyHistory"></div></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-head"><div><div class="eyebrow">Historical weight</div><h3>Weight over time</h3></div><span class="badge measured">2025 → now</span></div>
+      <div id="weightChart" class="chart-wrap"></div>
+      <p class="tiny chart-note" id="weightChartNote">Historical weekly AM averages + DEXA checkpoint + new AM weights logged in the app.</p>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-head"><div><div class="eyebrow">Nutrition history</div><h3>Average daily calories by week</h3></div></div>
+      <div id="calorieChart" class="chart-wrap"></div>
+      <p class="tiny chart-note" id="calorieChartNote">Session 1 selected weekly averages, Brazil weeks 1–10, and future weekly averages from your app.</p>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-head"><div><div class="eyebrow">Protein history</div><h3>Average protein by week</h3></div></div>
+      <div id="proteinChart" class="chart-wrap"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Progress photos</div>
+      <h3>Photo tracking</h3>
+      <p class="muted">Use the checkmarks on Today to record Front, Side, Back and Flex. Any checked angle adds a 📷 to that date in History.</p>
+    </div>
+    <div class="card" id="historicalCheckpointCard">
+      <div class="eyebrow">Body composition checkpoints</div>
+      <div class="checkpoint"><div><b>Jan 17, 2025 · DEXA</b><small>191.1 lb · 21.9% body fat · 41.8 lb fat · 141.7 lb lean tissue</small></div><span class="badge measured">Measured</span></div>
+      <div class="checkpoint"><div><b>April 2025 · Lean checkpoint</b><small>~178 lb · progress photos</small></div><span class="badge approx">Approx.</span></div>
+      <div class="checkpoint"><div><b>Aug 2026 · Current</b><small>~185 lb · current visual checkpoint</small></div><span class="badge approx">Current</span></div>
+    </div>
+    <div class="card" id="historicalSessionsCard">
+      <div class="eyebrow">Historical tracking sessions</div>
+      <div class="history-session"><b>Session 1 · Jan–Apr 2025</b><span>~188.6 → ~178.7 lb weekly AM average</span></div>
+      <div class="history-session"><b>Session 2 · Sep–Nov 2025</b><span>191.6 → 182.4 lb weekly AM average</span></div>
+      <div class="history-session"><b>Brazil · May 4–Jul 12, 2026</b><span>10-week avg: 2,995 kcal · 179 P · 247 C · 100 F</span></div>
+    </div>
+  
+    </div>
+
+    <div id="moreWorkoutsSection" style="display:none">
+      <div class="card program-start-card">
+        <div class="eyebrow">Program starting point</div>
+        <h3>Start anywhere in the plan</h3>
+        <p class="muted">Choose a phase, round and workout. The program will continue forward from that point and your existing history will stay intact.</p>
+        <div class="program-start-grid">
+          <label>Phase<select id="programStartPhase" onchange="refreshProgramStartOptions()"></select></label>
+          <label>Round<select id="programStartRound"></select></label>
+          <label>Workout<select id="programStartWorkout"></select></label>
+        </div>
+        <button class="primary" id="applyProgramStartBtn" type="button" onclick="applyProgramStartingPoint()">Start Program From Here</button>
+        <div class="tiny program-start-current" id="programStartCurrent"></div>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow">Program workouts</div>
+        <h3>Workout library</h3>
+        <p class="muted">View any workout in the full program at any time. Opening a workout here is read-only and does not change your schedule.</p>
+      </div>
+      <div id="programWorkoutLibrary"></div>
+    </div>
+
+    <div class="section-title">App data</div>
+    <div class="card">
+      <div class="eyebrow">Profile & data</div>
+      <h3>New user / reset</h3>
+      <p class="muted">Start fresh on this device. This clears saved workouts, nutrition, weights, activities, checklist history, water, photo checkmarks, profile data, historical charts, body-composition checkpoints and historical tracking sessions.</p>
+      <div class="export-actions">
+        <button class="secondary compact" id="exportDailyCsvBtn" type="button" onclick="exportDailyCSV()">Export daily CSV</button>
+        <button class="secondary compact" id="exportFullBackupBtn" type="button" onclick="exportFullBackup()">Export full backup</button>
+      </div>
+      <button class="danger compact" id="newUserResetBtn" onclick="resetForNewUser()">Reset for new user</button>
+    </div>
+</section>
+</div>
+
+<div class="modal" id="finishModal" aria-hidden="true">
+  <div class="modal-sheet">
+    <div class="modal-head"><div><div class="eyebrow">Workout complete</div><h2 id="finishWorkoutName"></h2></div><button class="ghost" id="closeFinish">✕</button></div>
+    <div class="summary-grid">
+      <label class="duration-field edit-duration-field"><span>HH : MM : SS</span>
+        <div class="duration-picker" aria-label="Workout duration">
+          <select id="sumDurationH" aria-label="Hours"><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select>
+          <b>:</b>
+          <select id="sumDurationM" aria-label="Minutes"><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select>
+          <b>:</b>
+          <select id="sumDurationS" aria-label="Seconds"><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select>
+        </div>
+        <input id="sumDuration" type="hidden" value="00:00:00">
+      </label>
+      <label>Completed at<input id="sumTime" type="time" step="60"></label>
+      <label>Total calories <span>kcal</span><input id="sumTotalCal" inputmode="numeric"></label>
+      <label>Avg heart rate <span>bpm</span><input id="sumAvgHr" inputmode="numeric"></label>
+      
+      <label>Post-workout weight <span>lb</span><input id="sumWeight" inputmode="decimal"></label>
+    </div>
+    <label class="notes-label">Notes<textarea id="sumNotes" rows="3" placeholder="Optional notes"></textarea></label>
+    <button class="primary" id="saveWorkoutBtn">Save workout</button>
+  </div>
+</div>
+
+
+<div class="modal" id="editWorkoutModal" aria-hidden="true">
+  <div class="modal-sheet edit-workout-sheet">
+    <div class="edit-modal-topbar">
+      <button class="ghost compact" id="closeEditWorkout" type="button" onclick="closeWorkoutEditor()">Cancel</button>
+      <div class="edit-modal-heading">Edit Completed Workout</div>
+      <button class="ghost compact edit-save-top" type="button" onclick="saveEditedWorkout()">Save</button>
+    </div>
+    <div class="edit-workout-identity">
+      <h2 id="editWorkoutName"></h2>
+      <div class="muted" id="editWorkoutMeta"></div>
+    </div>
+
+    <div class="section-title edit-section-label">Duration</div>
+    <div class="summary-grid edit-summary-grid">
+      <label class="duration-field edit-duration-field"><span>HH : MM : SS</span>
+        <div class="duration-picker" aria-label="Workout duration">
+          <select id="editWorkoutDurationH" aria-label="Hours"><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select>
+          <b>:</b>
+          <select id="editWorkoutDurationM" aria-label="Minutes"><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select>
+          <b>:</b>
+          <select id="editWorkoutDurationS" aria-label="Seconds"><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select>
+        </div>
+        <input id="editWorkoutDuration" type="hidden" value="00:00:00">
+      </label>
+      <label>Completed at<input id="editWorkoutTime" type="time" step="60"></label>
+      <label>Total calories <span>kcal</span><input id="editWorkoutCalories" inputmode="numeric"></label>
+      <label>Avg heart rate <span>bpm</span><input id="editWorkoutAvgHr" inputmode="numeric"></label>
+      <label>Post-workout weight <span>lb</span><input id="editWorkoutWeight" inputmode="decimal"></label>
+    </div>
+
+    <div class="section-title edit-sets-title">Sets / reps / weight</div>
+    <div id="editWorkoutSets"></div>
+
+    <label class="notes-label edit-notes-label"><span>Notes (optional)</span><textarea id="editWorkoutNotes" rows="4" maxlength="200" placeholder="How did it go?"></textarea></label>
+    <button class="primary edit-save-bottom" id="saveEditedWorkout" type="button" onclick="saveEditedWorkout()">Save Changes</button>
+  </div>
+</div>
+
+<div class="modal" id="programWorkoutModal" aria-hidden="true">
+  <div class="modal-sheet program-workout-sheet">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">Workout preview</div>
+        <h2 id="programWorkoutTitle"></h2>
+        <div class="muted" id="programWorkoutMeta"></div>
+      </div>
+      <button class="ghost" type="button" onclick="closeProgramWorkoutPreview()">✕</button>
+    </div>
+    <div id="programWorkoutPreview"></div>
+    <button class="secondary" type="button" onclick="closeProgramWorkoutPreview()">Close</button>
+  </div>
+</div>
+
+<nav class="nav">
+  <button data-screen="today" class="on">Today</button>
+  <button data-screen="workout">Workout</button>
+  <button data-screen="nutrition">Nutrition</button>
+  <button data-screen="checklist">Checklist</button>
+  <button data-screen="history">History</button>
+  <button data-screen="progress">More</button>
+</nav>
+
+<script src="data.js?v=public-1"></script>
+<script src="app.js?v=public-1"></script>
+</body>
+</html>
